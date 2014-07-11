@@ -1,0 +1,19 @@
+﻿p > strong {
+	font-weight: 200
+}
+section.slide-content strong {
+	font-weight: bold;
+}
+
+section.slide-content {
+	width: 1000px;
+	height: 800px;
+}
+
+body {
+	background-color: #ffffff;
+	background-image: url(background.png);
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: right bottom;
+}

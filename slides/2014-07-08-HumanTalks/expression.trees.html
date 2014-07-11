@@ -1,0 +1,947 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>Expression Trees in .NET</title>
+  <style type="text/css">
+    body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #222;
+  background-color: #f7f7f7;
+  font-size: 100%;
+}
+
+.slide {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0; right: 0;
+}
+
+.slide-content {
+  width: 800px;
+  height: 600px;
+  overflow: hidden;
+  margin: 80px auto 0 auto;
+  padding: 30px;
+
+  font-weight: 200;
+  font-size: 200%;
+  line-height: 1.375;
+}
+
+.controls {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.arrow {
+  width: 0; height: 0;
+  border: 30px solid #333;
+  float: left;
+  margin-right: 30px;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.prev {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+
+  border-left-width: 0;
+  border-right-width: 50px;
+}
+
+.next {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  border-right-color: transparent;
+
+  border-left-width: 50px;
+  border-right-width: 0;
+}
+
+.prev:hover {
+  border-right-color: #888;
+  cursor: pointer;
+}
+
+.next:hover {
+  border-left-color: #888;
+  cursor: pointer;
+}
+
+h1 {
+  font-size: 300%;
+  line-height: 1.2;
+  text-align: center;
+  margin: 170px 0 0;
+}
+
+h2 {
+  font-size: 100%;
+  line-height: 1.2;
+  margin: 5px 0;
+  text-align: center;
+  font-weight: 200;
+}
+
+h3 {
+  font-size: 140%;
+  line-height: 1.2;
+  border-bottom: 1px solid #aaa;
+  margin: 0;
+  padding-bottom: 15px;
+}
+
+ul {
+  padding: 20px 0 0 60px;
+  font-weight: 200;
+  line-height: 1.375;
+}
+
+.author h1 {
+  font-size: 170%;
+  font-weight: 200;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.author h3 {
+  font-weight: 100;
+  text-align: center;
+  font-size: 95%;
+  border: none;
+}
+
+a {
+  text-decoration: none;
+  color: #44a4dd;
+}
+
+a:hover {
+  color: #66b5ff;
+}
+
+pre {
+  font-size: 60%;
+  line-height: 1.3;
+}
+
+.progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.progress-bar {
+  width: 0%;
+  height: 3px;
+  background-color: #b4b4b4;
+
+  -webkit-transition: width 0.05s ease-out;
+  -moz-transition: width 0.05s ease-out;
+  -o-transition: width 0.05s ease-out;
+  transition: width 0.05s ease-out;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 850px) {
+
+  body {
+    font-size: 70%;
+  }
+
+  .slide-content {
+    width: auto;
+  }
+
+  img {
+    width: 100%;
+  }
+
+  h1 {
+    margin-top: 120px;
+  }
+
+  .prev, .prev:hover {
+    border-right-color: rgba(135, 135, 135, 0.5);
+  }
+
+  .next, .next:hover {
+    border-left-color: rgba(135, 135, 135, 0.5);
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 50%;
+    overflow: hidden;
+  }
+
+  .slide-content {
+    padding: 10px;
+    margin-top: 10px;
+    height: 340px;
+  }
+
+  h1 {
+    margin-top: 50px;
+  }
+
+  ul {
+    padding-left: 25px;
+  }
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    size: letter;
+  }
+
+  .hidden {
+    display: inline;
+  }
+
+  html {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  body {
+    margin: 0 auto !important;
+    border: 0;
+    padding: 0;
+    float: none !important;
+    overflow: visible;
+    background: none !important;
+    font-size: 52%;
+  }
+
+  .progress, .controls {
+    display: none;
+  }
+
+  .slide {
+    position: static;
+  }
+
+  .slide-content {
+    border: 1px solid #222;
+    margin-top: 0;
+    margin-bottom: 40px;
+    height: 3.5in;
+    overflow: visible;
+  }
+
+  .slide:nth-child(even) {
+    /* 2 slides per page */
+    page-break-before: always;
+  }
+}
+
+/*
+github.com style (c) Vasily Polovnyov <vast@whiteants.net>
+*/
+
+code, pre {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  overflow: auto;
+  padding: 6px 10px;
+}
+
+code {
+  padding: 0 5px;
+}
+
+pre>code {
+  margin: 0; padding: 0;
+  border: none;
+  background: transparent;
+}
+
+pre .comment,
+pre .template_comment,
+pre .diff .header,
+pre .javadoc {
+  color: #998;
+  font-style: italic
+}
+
+pre .keyword,
+pre .css .rule .keyword,
+pre .winutils,
+pre .javascript .title,
+pre .nginx .title,
+pre .subst,
+pre .request,
+pre .status {
+  color: #333;
+  font-weight: bold
+}
+
+pre .number,
+pre .hexcolor,
+pre .ruby .constant {
+  color: #099;
+}
+
+pre .string,
+pre .tag .value,
+pre .phpdoc,
+pre .tex .formula {
+  color: #d14
+}
+
+pre .title,
+pre .id {
+  color: #900;
+  font-weight: bold
+}
+
+pre .javascript .title,
+pre .lisp .title,
+pre .clojure .title,
+pre .subst {
+  font-weight: normal
+}
+
+pre .class .title,
+pre .haskell .type,
+pre .vhdl .literal,
+pre .tex .command {
+  color: #458;
+  font-weight: bold
+}
+
+pre .tag,
+pre .tag .title,
+pre .rules .property,
+pre .django .tag .keyword {
+  color: #000080;
+  font-weight: normal
+}
+
+pre .attribute,
+pre .variable,
+pre .lisp .body {
+  color: #008080
+}
+
+pre .regexp {
+  color: #009926
+}
+
+pre .class {
+  color: #458;
+  font-weight: bold
+}
+
+pre .symbol,
+pre .ruby .symbol .string,
+pre .lisp .keyword,
+pre .tex .special,
+pre .prompt {
+  color: #990073
+}
+
+pre .built_in,
+pre .lisp .title,
+pre .clojure .built_in {
+  color: #0086b3
+}
+
+pre .preprocessor,
+pre .pi,
+pre .doctype,
+pre .shebang,
+pre .cdata {
+  color: #999;
+  font-weight: bold
+}
+
+pre .deletion {
+  background: #fdd
+}
+
+pre .addition {
+  background: #dfd
+}
+
+pre .diff .change {
+  background: #0086b3
+}
+
+pre .chunk {
+  color: #aaa
+}
+
+﻿p > strong {
+	font-weight: 200
+}
+section.slide-content strong {
+	font-weight: bold;
+}
+
+section.slide-content {
+	width: 1000px;
+	height: 800px;
+}
+
+body {
+	background-color: #ffffff;
+	background-image: url(background.png);
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: right bottom;
+}
+
+  </style>
+</head>
+<body>
+    <div class="progress">
+    <div class="progress-bar"></div>
+  </div>
+
+  <div class="slide " id="slide-1">
+    <section class="slide-content"><h1 id="expression-trees-br-in-net">Expression Trees<br />in .NET</h1>
+<h2 id="human-talks-2014-07-08">Human Talks - 2014-07-08</h2>
+<h2 id="guillaume-mouron-lucca">Guillaume Mouron - Lucca</h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-2">
+    <section class="slide-content"><h3 id="presentation">Presentation</h3>
+<ul>
+<li>Guillaume Mouron<ul>
+<li><em>Software Engineer</em> at <em>Lucca</em> since July 2013</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Lucca makes <strong>SaaS</strong> products for <strong>managing HR processes</strong><br /><em>(leave management, business expenses management, ...)</em><ul>
+<li>Backend: <em>API REST</em> in <strong>C#/.NET</strong></li>
+<li>Frontend: <strong>JS</strong> <em>(backbone, Angular, vanilla)</em></li>
+</ul>
+</li>
+</ul>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-3">
+    <section class="slide-content"><h3 id="expression-trees">Expression Trees</h3>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-4">
+    <section class="slide-content"><h3 id="expression-trees">Expression Trees</h3>
+<p><img src="Ent.jpg" alt="An Ent"></p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-5">
+    <section class="slide-content"><h3 id="expression-trees">Expression Trees</h3>
+<p><img src="NotEnt.jpg" alt="An Ent"></p>
+<h4 id="that-s-not-a-tree-that-s-an-ent">That&#39;s not a tree, that&#39;s an Ent</h4>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-6">
+    <section class="slide-content"><h3 id="expression-trees">Expression Trees</h3>
+<h1 id="think-_linq_">Think <em>LINQ</em></h1>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-7">
+    <section class="slide-content"><h3 id="linq">LINQ</h3>
+<p>Behind the scene, LINQ uses <em>Expression Trees</em> for each of its operations<sup>0</sup></p>
+<p>Example:</p>
+<pre><code class="lang-cs"><span class="keyword">var</span> userIds = users.Where(u =&gt; u.dtContractEnd &lt; DateTime.Now).Select(u =&gt; u.id);
+<span class="comment">//                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         ^^^^^^^^^</span>
+<span class="comment">//                        Expression&lt;Func&lt;User, bool&gt;&gt;                Expression&lt;Func&lt;User, int&gt;&gt;</span></code></pre>
+<p><sub>[0] Not entirely true, but let&#39;s assume it is</sub></p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-8">
+    <section class="slide-content"><h3 id="limitations-of-linq">Limitations of LINQ</h3>
+<p>While powerful, LINQ has some limitations
+Example:</p>
+<pre><code class="lang-cs"><span class="keyword">class</span> OfficeRoom {
+    RepairStatus status { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">bool</span> isBeingRepaired() { <span class="keyword">return</span> status == RepairStatus.Repairing; }
+}
+<span class="keyword">var</span> officelessUsers = users.Where(u =&gt; u.officeRoom.isBeingRepaired());</code></pre>
+<p>With LINQ To Objects, no problem, this works!</p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-9">
+    <section class="slide-content"><h3 id="limitations-of-linq">Limitations of LINQ</h3>
+<p>With LINQ To Entities, we get:</p>
+<p><code>LINQ To Entities does not recognize the method &#39;Boolean isBeingRepaired()&#39; method, and this method cannot be translated into a store expression.</code></p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-10">
+    <section class="slide-content"><h3 id="limitations-of-linq">Limitations of LINQ</h3>
+<pre><code class="lang-cs"><span class="comment">// DOESN'T WORK</span>
+<span class="keyword">var</span> officelessUsers = users.Where(u =&gt; u.officeRoom.isBeingRepaired());
+<span class="comment">// DOES WORK</span>
+<span class="keyword">var</span> officelessUsers = users.Where(u =&gt; u.officeRoom.status == RepairStatus.Repairing);</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-11">
+    <section class="slide-content"><h3 id="limitations-of-linq">Limitations of LINQ</h3>
+<pre><code class="lang-cs"><span class="comment">// DOESN'T WORK</span>
+<span class="keyword">var</span> officelessUsers = users.Where(u =&gt; u.officeRoom.isBeingRepaired());
+<span class="comment">// DOES WORK</span>
+<span class="keyword">var</span> officelessUsers = users.Where(u =&gt; u.officeRoom.status == RepairStatus.Repairing);</code></pre>
+<h2 id="-philosoraptor-philosoraptor-jpg-"><img src="philosoraptor.jpg" alt="Philosoraptor"></h2>
+<p>So there must be a way to combine both dynamically</p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-12">
+    <section class="slide-content"><h3 id="the-expression-visitor">The Expression visitor</h3>
+<h2 id="-nbsp-">&nbsp;</h2>
+<h2 id="-les-visiteurs-visiteur-jpg-"><img src="visiteur.jpg" alt="Les Visiteurs"></h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-13">
+    <section class="slide-content"><h3 id="the-expression-visitor">The Expression visitor</h3>
+<p>Microsoft provides a way to <em>explore</em> the expression tree and replace some of its nodes</p>
+<h2 id="__the-expressionvisitor-__"><strong>The <code>ExpressionVisitor</code></strong></h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-14">
+    <section class="slide-content"><h3 id="first-the-refactored-code-using-the-visitor">First, the refactored code using the visitor</h3>
+<pre><code class="lang-cs"><span class="keyword">class</span> OfficeRoom {
+    RepairStatus status { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">static</span> <span class="keyword">readonly</span> Expression&lt;Func&lt;OfficeRoom, <span class="keyword">bool</span>&gt;&gt; isBeingRepairedExpr = 
+                                    (o =&gt; o.status == RepairStatus.Repairing);
+}</code></pre>
+<pre><code class="lang-cs"><span class="keyword">var</span> officelessUsers = users.Where(
+  ExprHelper.ApplyExprToProp&lt;User, OfficeRoom&gt;(u =&gt; u.OfficeRoom, OfficeRoom.isBeingRepairedExpr)
+);</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-15">
+    <section class="slide-content"><h3 id="implementing-an-expression-visitor">Implementing an Expression Visitor</h3>
+<pre><code class="lang-cs"><span class="keyword">class</span> ReplacementVisitor : ExpressionVisitor
+{
+    <span class="keyword">readonly</span> Expression _oldExpr;
+    <span class="keyword">readonly</span> Expression _newExpr;
+
+    <span class="keyword">public</span> ReplacementVisitor(Expression oldExpr, Expression newExpr)
+    {
+        _oldExpr = oldExpr;
+        _newExpr = newExpr;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">override</span> Expression Visit(Expression node)
+    {
+        <span class="keyword">return</span> node == _oldExpr ? _newExpr : <span class="keyword">base</span>.Visit(node);
+    }
+}</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-16">
+    <section class="slide-content"><h3 id="implementing-an-expression-visitor">Implementing an Expression Visitor</h3>
+<pre><code class="lang-cs"><span class="keyword">class</span> ReplacementVisitor : ExpressionVisitor
+{
+    <span class="keyword">readonly</span> Expression _oldExpr;
+    <span class="keyword">readonly</span> Expression _newExpr;
+
+    <span class="keyword">public</span> ReplacementVisitor(Expression oldExpr, Expression newExpr)
+    {
+        _oldExpr = oldExpr;
+        _newExpr = newExpr;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">override</span> Expression Visit(Expression node)
+    {
+        <span class="keyword">return</span> node == _oldExpr ? _newExpr : <span class="keyword">base</span>.Visit(node);
+    }
+}</code></pre>
+<pre><code class="lang-cs"><span class="keyword">public</span> <span class="keyword">class</span> ExprHelper
+{
+    <span class="keyword">public</span> <span class="keyword">static</span> Expression&lt;Func&lt;T, <span class="keyword">bool</span>&gt;&gt; ApplyExprToProp&lt;T, TNav&gt;(
+                                                            Expression&lt;Func&lt;T, TNav&gt;&gt; parent,
+                                                            Expression&lt;Func&lt;TNav, <span class="keyword">bool</span>&gt;&gt; nav)
+    {
+        <span class="comment">// For Info:     parent:    u =&gt; u.OfficeRoom</span>
+        <span class="comment">//                  nav:    o =&gt; o.status == RepairStatus.Repairing</span>
+
+        <span class="keyword">var</span> visitor = <span class="keyword">new</span> ReplacementVisitor(nav.Parameters[<span class="number">0</span>], parent.Body);
+        <span class="keyword">var</span> body = visitor.Visit(nav.Body);
+        <span class="keyword">return</span> Expression.Lambda&lt;Func&lt;T, <span class="keyword">bool</span>&gt;&gt;(body, parent.Parameters[<span class="number">0</span>]);
+    }
+}</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-17">
+    <section class="slide-content"><h3 id="bonus">Bonus</h3>
+<p>We can still use the Expression as a function, this way:</p>
+<pre><code class="lang-cs"><span class="keyword">class</span> OfficeRoom {
+    RepairStatus status { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">static</span> <span class="keyword">readonly</span> Expression&lt;Func&lt;OfficeRoom, <span class="keyword">bool</span>&gt;&gt; isBeingRepairedExpr = 
+                                    (o =&gt; o.status == RepairStatus.Repairing);
+
+    <span class="keyword">bool</span> isBeingRepaired() { <span class="keyword">return</span> OfficeRoom.isBeingRepairedExpr.Compile()(<span class="keyword">this</span>); }
+}</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-18">
+    <section class="slide-content"><h3 id="a-more-powerful-use-case">A more powerful use case</h3>
+<h2 id="-nbsp-">&nbsp;</h2>
+<h2 id="-infinite-power-infinitepower-jpg-"><img src="InfinitePower.jpg" alt="Infinite power"></h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-19">
+    <section class="slide-content"><h3 id="what-about-a-_dsl_-">What about a <em>DSL</em> ?</h3>
+<ol>
+<li>We want users to be able to enter some business rules</li>
+<li>Those are dynamic</li>
+<li>They need a nice, friendly web interface to enter the rules</li>
+<li>We want to limit the operators and functions available</li>
+<li>And we want to execute the code in a safe way</li>
+</ol>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-20">
+    <section class="slide-content"><h3 id="we-could-use-">We could use ...</h3>
+<p>A Lex/Yacc type of tools with a grammar</p>
+<p>But as powerful as they are, it&#39;s cumbersome</p>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-21">
+    <section class="slide-content"><h3 id="or-we-can-use">Or we can use</h3>
+<h1 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h1>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-22">
+    <section class="slide-content"><h2 id="-nbsp-">&nbsp;</h2>
+<h2 id="-tell-me-more-tell-me-more-jpg-"><img src="tell-me-more-.jpg" alt="Tell me more"></h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-23">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<p>From this:</p>
+<h2 id="-seniority-rules-seniority-png-"><img src="seniority.png" alt="Seniority rules"></h2>
+<h2 id="-seniority-rules-seniority2-png-"><img src="seniority2.png" alt="Seniority rules"></h2>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-24">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<p>We get this:</p>
+<pre><code class="lang-json">{
+  "<span class="attribute">return</span>": <span class="value"><span class="string">"MAX"</span></span>,
+  "<span class="attribute">elements</span>": <span class="value">[
+    {
+      "<span class="attribute">return</span>": <span class="value"><span class="number">1</span></span>,
+      "<span class="attribute">criterion</span>": <span class="value">{
+        "<span class="attribute">unit</span>": <span class="value"><span class="string">"year"</span></span>,
+        "<span class="attribute">name</span>": <span class="value"><span class="string">"seniority"</span></span>,
+        "<span class="attribute">operator</span>": <span class="value"><span class="string">"&gt;="</span></span>,
+        "<span class="attribute">value</span>": <span class="value"><span class="number">5</span>
+      }</span>
+    }</span>,
+    {
+      "<span class="attribute">return</span>": <span class="value"><span class="number">2</span></span>,
+      "<span class="attribute">criterion</span>": <span class="value">{
+        "<span class="attribute">unit</span>": <span class="value"><span class="string">"year"</span></span>,
+        "<span class="attribute">name</span>": <span class="value"><span class="string">"seniority"</span></span>,
+        "<span class="attribute">operator</span>": <span class="value"><span class="string">"&gt;="</span></span>,
+        "<span class="attribute">value</span>": <span class="value"><span class="number">10</span>
+      }</span>
+    }</span>,
+    {
+      "<span class="attribute">return</span>": <span class="value"><span class="number">3</span></span>,
+      "<span class="attribute">criterion</span>": <span class="value">{
+        "<span class="attribute">unit</span>": <span class="value"><span class="string">"year"</span></span>,
+        "<span class="attribute">name</span>": <span class="value"><span class="string">"seniority"</span></span>,
+        "<span class="attribute">operator</span>": <span class="value"><span class="string">"&gt;="</span></span>,
+        "<span class="attribute">value</span>": <span class="value"><span class="number">15</span>
+      }</span>
+    }</span>,
+    {
+      "<span class="attribute">return</span>": <span class="value"><span class="number">4</span></span>,
+      "<span class="attribute">criterion</span>": <span class="value">{
+        "<span class="attribute">unit</span>": <span class="value"><span class="string">"year"</span></span>,
+        "<span class="attribute">name</span>": <span class="value"><span class="string">"seniority"</span></span>,
+        "<span class="attribute">operator</span>": <span class="value"><span class="string">"&gt;="</span></span>,
+        "<span class="attribute">value</span>": <span class="value"><span class="number">20</span>
+      }</span>
+    }</span>
+  ]
+}</span></code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-25">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<pre><code class="lang-cs"><span class="comment">// For info:  "criterion": {  "unit": "year", "name": "seniority", "operator": "&gt;=", "value": 5 }</span>
+
+<span class="keyword">var</span> ruleValuesProviderType = <span class="keyword">typeof</span>(RuleValuesProvider);
+<span class="keyword">var</span> parameter = Expression.Parameter(ruleValuesProviderType);</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-26">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<pre><code class="lang-cs"><span class="comment">// For info:  "criterion": {  "unit": "year", "name": "seniority", "operator": "&gt;=", "value": 5 }</span>
+
+<span class="keyword">var</span> ruleValuesProviderType = <span class="keyword">typeof</span>(RuleValuesProvider);
+<span class="keyword">var</span> parameter = Expression.Parameter(ruleValuesProviderType);
+
+<span class="keyword">var</span> methodInfo = ruleValuesProviderType.GetMethod(<span class="string">"GetValue"</span>)
+                    .MakeGenericMethod(<span class="keyword">new</span> Type[] { <span class="keyword">typeof</span>(<span class="keyword">int</span>) });
+<span class="keyword">var</span> memberExpression = Expression.Call(parameter, methodInfo,
+                            Expression.Constant(c.name), Expression.Constant(c.unit));</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-27">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<pre><code class="lang-cs"><span class="comment">// For info:  "criterion": {  "unit": "year", "name": "seniority", "operator": "&gt;=", "value": 5 }</span>
+
+<span class="keyword">var</span> ruleValuesProviderType = <span class="keyword">typeof</span>(RuleValuesProvider);
+<span class="keyword">var</span> parameter = Expression.Parameter(ruleValuesProviderType);
+<span class="keyword">var</span> methodInfo = ruleValuesProviderType.GetMethod(<span class="string">"GetValue"</span>)
+                    .MakeGenericMethod(<span class="keyword">new</span> Type[] { <span class="keyword">typeof</span>(<span class="keyword">int</span>) });
+<span class="keyword">var</span> memberExpression = Expression.Call(parameter, methodInfo,
+                        Expression.Constant(c.name), Expression.Constant(c.unit));
+
+<span class="keyword">var</span> constant = Expression.Constant(<span class="keyword">int</span>.Parse(c.<span class="keyword">value</span>));
+<span class="keyword">switch</span> (c.@<span class="keyword">operator</span>)
+{
+    <span class="keyword">case</span> <span class="string">"&gt;="</span>:
+        body = Expression.GreaterThanOrEqual(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"&lt;="</span>:
+        body = Expression.LessThanOrEqual(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"&gt;"</span>:
+        body = Expression.GreaterThan(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"&lt;"</span>:
+        body = Expression.LessThan(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"=="</span>:
+        body = Expression.Equal(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"!="</span>:
+        body = Expression.NotEqual(memberExpression, constant);
+        <span class="keyword">break</span>;
+    <span class="keyword">default</span>:
+        <span class="keyword">throw</span> <span class="keyword">new</span> NotImplementedException();
+}</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-28">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<p>We can implement &quot;OR&quot; and &quot;AND&quot; as well</p>
+<pre><code class="lang-cs"><span class="comment">// CompileCriterion is the function shown on the previous slide</span>
+<span class="keyword">var</span> leftExpression = CompileCriterion(c.conditions[<span class="number">0</span>], parameter);
+<span class="keyword">var</span> rightExpression = CompileCriterion(c.conditions[<span class="number">1</span>], parameter);
+
+<span class="keyword">switch</span> (c.logicalOperator)
+{
+    <span class="keyword">case</span> <span class="string">"OR"</span>:
+        body = Expression.OrElse(leftExpression.Body, rightExpression.Body);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"AND"</span>:
+        body = Expression.AndAlso(leftExpression.Body, rightExpression.Body);
+        <span class="keyword">break</span>;
+    <span class="keyword">default</span>:
+        <span class="keyword">throw</span> <span class="keyword">new</span> NotImplementedException();
+}</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-29">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<p>In both case, the final statement is to wrap the Expression in a lambda</p>
+<pre><code class="lang-cs"><span class="keyword">return</span> Expression.Lambda&lt;Func&lt;RuleValuesProvider, <span class="keyword">bool</span>&gt;&gt;(body, parameter);</code></pre>
+</section>
+  </div>
+  <div class="slide hidden " id="slide-30">
+    <section class="slide-content"><h3 id="an-_expression-tree_-based-rule-engine">an <em>Expression Tree</em> based rule engine</h3>
+<p>In both case, the final statement is to wrap the Expression in a lambda</p>
+<pre><code class="lang-cs"><span class="keyword">return</span> Expression.Lambda&lt;Func&lt;RuleValuesProvider, <span class="keyword">bool</span>&gt;&gt;(body, parameter);</code></pre>
+<p><strong>In around 100 lines of code, we have a rule engine with a DSL</strong></p>
+</section>
+  </div>
+  <div class="slide hidden" id="slide-31">
+    <section class="slide-content"><div class="author">
+  <h1 class="name">Guillaume Mouron - Lucca</h1>
+    <h3 class="twitter">
+      <a href="http://twitter.com/@GMouron">@GMouron</a>
+    </h3>
+    <h3 class="email">
+      <a href="mailto:guillaume.mouron@gmail.com">guillaume.mouron@gmail.com</a>
+    </h3>
+</div>
+</section>
+  </div>
+
+  <div class="controls">
+    <div class="arrow prev"></div>
+    <div class="arrow next"></div>
+  </div>
+
+
+  <script type="text/javascript">
+    /**
+ * Returns the current page number of the presentation.
+ */
+function currentPosition() {
+  return parseInt(document.querySelector('.slide:not(.hidden)').id.slice(6));
+}
+
+
+/**
+ * Navigates forward n pages
+ * If n is negative, we will navigate in reverse
+ */
+function navigate(n) {
+  var position = currentPosition();
+  var numSlides = document.getElementsByClassName('slide').length;
+
+  /* Positions are 1-indexed, so we need to add and subtract 1 */
+  var nextPosition = (position - 1 + n) % numSlides + 1;
+
+  /* Normalize nextPosition in-case of a negative modulo result */
+  nextPosition = (nextPosition - 1 + numSlides) % numSlides + 1;
+
+  document.getElementById('slide-' + position).classList.add('hidden');
+  document.getElementById('slide-' + nextPosition).classList.remove('hidden');
+
+  updateProgress();
+  updateURL();
+  updateTabIndex();
+}
+
+
+/**
+ * Updates the current URL to include a hashtag of the current page number.
+ */
+function updateURL() {
+  window.history.replaceState({} , null, '#' + currentPosition());
+}
+
+
+/**
+ * Sets the progress indicator.
+ */
+function updateProgress() {
+  var progressBar = document.querySelector('.progress-bar');
+
+  if (progressBar !== null) {
+    var numSlides = document.getElementsByClassName('slide').length;
+    var position = currentPosition() - 1;
+    var percent = (numSlides === 1) ? 100 : 100 * position / (numSlides - 1);
+    progressBar.style.width = percent.toString() + '%';
+  }
+}
+
+
+/**
+ * Removes tabindex property from all links on the current slide, sets
+ * tabindex = -1 for all links on other slides. Prevents slides from appearing
+ * out of control.
+ */
+function updateTabIndex() {
+  var allLinks = document.querySelectorAll('.slide a');
+  var position = currentPosition();
+  var currentPageLinks = document.getElementById('slide-' + position).querySelectorAll('a');
+  var i;
+
+  for (i = 0; i < allLinks.length; i++) {
+    allLinks[i].setAttribute('tabindex', -1);
+  }
+
+  for (i = 0; i < currentPageLinks.length; i++) {
+    currentPageLinks[i].removeAttribute('tabindex');
+  }
+}
+
+/**
+ * Determines whether or not we are currently in full screen mode
+ */
+function isFullScreen() {
+  return document.fullscreenElement ||
+         document.mozFullScreenElement ||
+         document.webkitFullscreenElement ||
+         document.msFullscreenElement;
+}
+
+/**
+ * Toggle fullScreen mode on document element.
+ * Works on chrome (>= 15), firefox (>= 9), ie (>= 11), opera(>= 12.1), safari (>= 5).
+ */
+function toggleFullScreen() {
+  /* Convenient renames */
+  var docElem = document.documentElement;
+  var doc = document;
+
+  docElem.requestFullscreen =
+      docElem.requestFullscreen ||
+      docElem.msRequestFullscreen ||
+      docElem.mozRequestFullScreen ||
+      docElem.webkitRequestFullscreen.bind(docElem, Element.ALLOW_KEYBOARD_INPUT);
+
+  doc.exitFullscreen =
+      doc.exitFullscreen ||
+      doc.msExitFullscreen ||
+      doc.mozCancelFullScreen ||
+      doc.webkitExitFullscreen;
+
+  isFullScreen() ? doc.exitFullscreen() : docElem.requestFullscreen();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Update the tabindex to prevent weird slide transitioning
+  updateTabIndex();
+
+  // If the location hash specifies a page number, go to it.
+  var page = window.location.hash.slice(1);
+  if (page) {
+    navigate(parseInt(page) - 1);
+  }
+
+  document.onkeydown = function (e) {
+    var kc = e.keyCode;
+
+    // left, down, H, J, backspace, PgUp - BACK
+    // up, right, K, L, space, PgDn - FORWARD
+    // enter - FULLSCREEN
+    if (kc === 37 || kc === 40 || kc === 8 || kc === 72 || kc === 74 || kc === 33) {
+      navigate(-1);
+    } else if (kc === 38 || kc === 39 || kc === 32 || kc === 75 || kc === 76 || kc === 34) {
+      navigate(1);
+    } else if (kc === 13) {
+      toggleFullScreen();
+    }
+  };
+
+  if (document.querySelector('.next') && document.querySelector('.prev')) {
+    document.querySelector('.next').onclick = function (e) {
+      e.preventDefault();
+      navigate(1);
+    };
+
+    document.querySelector('.prev').onclick = function (e) {
+      e.preventDefault();
+      navigate(-1);
+    };
+  }
+});
+
+
+  </script>
+</body>
+</html>
